@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unit42FirmwareXFinding",
+  "description": "Standardized vulnerability and flaw reporting schema for Unit42-FirmwareX (PRD Appendix A)",
+  "type": "object",
+  "required": [
+    "vulnerability_id",
+    "firmware_id",
+    "binary",
+    "architecture",
+    "category",
+    "cwe",
+    "risk_rating",
+    "confidence",
+    "evidence_ref",
+    "redacted",
+    "status",
+    "detected_at"
+  ],
+  "properties": {
+    "vulnerability_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Stable unique identifier for the finding"
+    },
+    "firmware_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of the analyzed firmware"
+    },
+    "binary": {
+      "type": "string",
+      "description": "Path to binary within the reconstructed rootfs"
+    },
+    "architecture": {
+      "type": "string",
+      "enum": ["ARM32", "ARM64", "MIPS", "MIPSEL", "x86", "x86_64", "UNKNOWN"]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "memory_corruption",
+        "hardcoded_secret",
+        "weak_crypto",
+        "missing_mitigation",
+        "command_injection"
+      ]
+    },
+    "cwe": {
+      "type": "string",
+      "pattern": "^CWE-[0-9]+$",
+      "description": "Common Weakness Enumeration classification identifier"
+    },
+    "address": {
+      "type": ["string", "null"],
+      "pattern": "^0x[0-9a-fA-F]+$",
+      "description": "Virtual memory address of the finding if applicable"
+    },
+    "sink": {
+      "type": ["string", "null"],
+      "description": "Sensitive dangerous sink symbol (e.g. strcpy, system, popen)"
+    },
+    "source": {
+      "type": ["string", "null"],
+      "description": "Taint input origin (e.g. http_param:host, nvram:pass, stdin)"
+    },
+    "tainted_path": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ordered array of virtual memory addresses along execution trace"
+    },
+    "crash_state": {
+      "type": ["object", "null"],
+      "properties": {
+        "fault_address": { "type": ["string", "null"] },
+        "registers": { "type": ["object", "null"] },
+        "overflow_offset": { "type": ["integer", "null"] },
+        "stack_hash": { "type": ["string", "null"] }
+      }
+    },
+    "risk_rating": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["confirmed", "probable", "heuristic"]
+    },
+    "evidence_ref": {
+      "type": "string",
+      "description": "Diagnostic proof and explanation, strictly non-weaponized and redacted"
+    },
+    "redacted": {
+      "type": "boolean",
+      "description": "True if discovered secrets/tokens are masked with hashes"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["new", "triaged", "validated", "false_positive"]
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp in ISO 8601 / RFC 3339 UTC"
+    }
+  }
+}

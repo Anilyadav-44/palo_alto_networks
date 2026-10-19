@@ -1,0 +1,47 @@
+[
+  {
+    "path": "/bin/busybox",
+    "architecture": "x86",
+    "endianness": "little",
+    "bits": 32,
+    "nx": true,
+    "pie": true,
+    "relro": "none",
+    "stack_canary": true,
+    "fortify": false,
+    "stripped": false,
+    "sha256": "0bc653eded440c2fb73e23a7aedc9d7d10c8733343c2b52b7ee67412689c09ff",
+    "banned_calls_count": 0,
+    "risk_score": 2.5
+  },
+  {
+    "path": "/bin/httpd",
+    "architecture": "MIPS",
+    "endianness": "big",
+    "bits": 32,
+    "nx": false,
+    "pie": false,
+    "relro": "none",
+    "stack_canary": false,
+    "fortify": false,
+    "stripped": false,
+    "sha256": "845b0762a7ae9dc5e4b5a9def4605263483f757e10b59e6c14931dbf3ca6e1d4",
+    "banned_calls_count": 0,
+    "risk_score": 10.0
+  },
+  {
+    "path": "/bin/upnpd",
+    "architecture": "ARM32",
+    "endianness": "little",
+    "bits": 32,
+    "nx": true,
+    "pie": false,
+    "relro": "none",
+    "stack_canary": false,
+    "fortify": false,
+    "stripped": false,
+    "sha256": "802308bb1e7ee0fb7564f5b30c5b4b99b785810d7e386184b5592d259836e2bb",
+    "banned_calls_count": 0,
+    "risk_score": 7.0
+  }
+]

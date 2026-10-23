@@ -207,7 +207,10 @@ class FirmwareExtractor:
                 continue
 
             try:
-                tar.extract(member, path=target_dir)
+                if hasattr(tarfile, 'data_filter'):
+                    tar.extract(member, path=target_dir, filter='data')
+                else:
+                    tar.extract(member, path=target_dir)
                 self.extracted_count += 1
                 self.total_extracted_bytes += member.size
             except Exception:

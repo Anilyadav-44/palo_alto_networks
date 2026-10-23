@@ -75,3 +75,26 @@ def test_protocol_fuzzer_mutations():
     assert len(reqs) >= 5
     assert any("overflow" == r["pattern_type"] for r in reqs)
     assert any("injection" == r["pattern_type"] for r in reqs)
+
+    # Test UPnP and MQTT mutation generators (FR-4.1)
+    upnp_cases = ProtocolFuzzer.generate_upnp_mutations()
+    assert len(upnp_cases) >= 5
+    assert any("SOAPAction" in c["headers"] for c in upnp_cases)
+
+    mqtt_cases = ProtocolFuzzer.generate_mqtt_mutations()
+    assert len(mqtt_cases) >= 5
+    assert any(c["packet_type"] == "PUBLISH" for c in mqtt_cases)
+
+    # Test fuzzer execution, crash detection, and stack hash deduplication (FR-4.2, FR-4.3)
+    findings = ProtocolFuzzer.fuzz_service_target(
+        firmware_id="fw_test_fuzz",
+        binary_rel_path="/bin/httpd",
+        protocol="HTTP",
+        arch="MIPS"
+    )
+    assert len(findings) >= 1
+    # Check deduplication: stack hashes must be unique
+    stack_hashes = [f.crash_state.stack_hash for f in findings if f.crash_state]
+    assert len(stack_hashes) == len(set(stack_hashes))
+    assert all(f.category == Category.MEMORY_CORRUPTION for f in findings)
+    assert all(f.confidence.value == "confirmed" for f in findings)

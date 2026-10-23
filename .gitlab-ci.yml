@@ -1,0 +1,113 @@
+# Project Unit42-FirmwareX — GitLab CI/CD Pipeline
+# Palo Alto Networks // Unit 42 Threat Research & Security Engineering
+# Automated Verification, Security Guardrail Audit & Container Deployment
+
+stages:
+  - lint
+  - test
+  - security-audit
+  - build
+  - deploy
+
+variables:
+  PYTHONUNBUFFERED: "1"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+default:
+  image: python:3.11-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git curl build-essential procps
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+
+# ==============================================================================
+# 1. Lint & Code Quality
+# ==============================================================================
+code_quality:
+  stage: lint
+  script:
+    - pip install flake8
+    - flake8 firmwarex tests scripts --count --select=E9,F63,F7,F82 --show-source --statistics
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+
+# ==============================================================================
+# 2. Automated Test Suite & Coverage (Section 13 KPIs)
+# ==============================================================================
+pytest_suite:
+  stage: test
+  script:
+    - pytest -v --cov=firmwarex --cov-report=term --cov-report=xml:coverage.xml --junitxml=junit.xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+      - junit.xml
+    expire_in: 30 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+
+# ==============================================================================
+# 3. Containment & Non-Weaponization Security Gate (PRD Section 7)
+# ==============================================================================
+containment_guardrail_audit:
+  stage: security-audit
+  script:
+    - echo "Validating sandbox zero-egress containment and quota termination..."
+    - pytest -v tests/test_sandbox.py
+    - echo "Validating 100% secret redaction and non-weaponized crash reporting..."
+    - pytest -v tests/test_scanner_redactor.py tests/test_taint_symbolic.py -k "redactor or non_weaponization"
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+
+# ==============================================================================
+# 4. Container Build & Push
+# ==============================================================================
+build_docker_images:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker info
+  script:
+    - echo "Building Unit42-FirmwareX Docker container image..."
+    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
+    - |
+      if [ -n "$CI_REGISTRY_USER" ]; then
+        echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+        docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+      else
+        echo "Docker registry credentials not set. Image build verified successfully."
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ==============================================================================
+# 5. Staging / Production Deployment
+# ==============================================================================
+deploy_staging:
+  stage: deploy
+  script:
+    - echo "Deploying Unit42-FirmwareX stack (FastAPI + Streamlit Dashboard)..."
+    - echo "Application configured for sandboxed IoT analysis on port 8000 / 8501."
+  environment:
+    name: staging
+    url: http://localhost:8501
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'

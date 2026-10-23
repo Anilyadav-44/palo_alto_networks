@@ -92,6 +92,66 @@ async def upload_firmware(
         "message": "Firmware accepted and dispatched to sandboxed analysis queue."
     }
 
+@router.get("/firmware/{firmware_id}")
+async def get_firmware_summary(firmware_id: str):
+    """
+    GET /api/v1/firmware/{id}
+    PRD Section 8.1: Retrieve analysis status and summary for an image.
+    """
+    report_file = settings.REPORT_DIR / f"{firmware_id}_report.json"
+    if report_file.exists():
+        with open(report_file, "r", encoding="utf-8") as f:
+            report_data = json.load(f)
+        return {
+            "firmware_id": firmware_id,
+            "status": "completed",
+            "metadata": report_data.get("metadata", {}),
+            "overall_posture_score": report_data.get("overall_posture_score", 0.0),
+            "summary": report_data.get("summary", {}),
+            "total_vulnerabilities": len(report_data.get("vulnerabilities", [])),
+            "binaries_audited": len(report_data.get("audit_matrix", []))
+        }
+
+    if firmware_id in JOB_STORE:
+        job = JOB_STORE[firmware_id]
+        return {
+            "firmware_id": firmware_id,
+            "job_id": job.job_id,
+            "status": job.stage.value,
+            "progress_percentage": job.progress_percentage,
+            "message": job.message,
+            "started_at": job.started_at,
+            "updated_at": job.updated_at
+        }
+
+    raise HTTPException(status_code=404, detail=f"Firmware {firmware_id} not found")
+
+@router.get("/jobs/{job_id}", response_model=AnalysisJobStatus)
+async def get_job_status(job_id: str):
+    """
+    GET /api/v1/jobs/{jobId}
+    PRD Section 8.1: Status and telemetry for an individual analysis job.
+    """
+    if job_id in JOB_STORE:
+        return JOB_STORE[job_id]
+
+    # Check if job_id corresponds to a known firmware_id with a report
+    for report_file in settings.REPORT_DIR.glob("*_report.json"):
+        f_id = report_file.stem.replace("_report", "")
+        if job_id == f_id:
+            return AnalysisJobStatus(
+                job_id=job_id,
+                firmware_id=f_id,
+                stage=AnalysisStage.COMPLETED,
+                progress_percentage=100,
+                message="Analysis completed successfully.",
+                started_at=datetime.now(timezone.utc).isoformat(),
+                updated_at=datetime.now(timezone.utc).isoformat(),
+                completed_at=datetime.now(timezone.utc).isoformat()
+            )
+
+    raise HTTPException(status_code=404, detail=f"Analysis job {job_id} not found")
+
 @router.get("/firmware/{firmware_id}/status", response_model=AnalysisJobStatus)
 async def get_analysis_status(firmware_id: str):
     """GET /api/v1/firmware/{id}/status"""

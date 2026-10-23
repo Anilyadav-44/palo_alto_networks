@@ -53,21 +53,33 @@ def test_api_report_and_audit_endpoints():
     assert len(report_files) > 0
     f_id = report_files[0].stem.replace("_report", "")
 
-    # 1. Test binary-audit
+    # 1. Test PRD 8.1 /firmware/{id} summary endpoint
+    res_summary = client.get(f"/api/v1/firmware/{f_id}")
+    assert res_summary.status_code == 200
+    summary_data = res_summary.json()
+    assert summary_data["firmware_id"] == f_id
+    assert "metadata" in summary_data
+
+    # 2. Test PRD 8.1 /jobs/{jobId} endpoint
+    res_job = client.get(f"/api/v1/jobs/{f_id}")
+    assert res_job.status_code == 200
+    assert res_job.json()["stage"] == "completed"
+
+    # 3. Test binary-audit
     res = client.get(f"/api/v1/firmware/{f_id}/binary-audit")
     assert res.status_code == 200
     data = res.json()
     assert "binaries" in data
     assert len(data["binaries"]) >= 1
 
-    # 2. Test filesystem inventory
+    # 4. Test filesystem inventory
     res_fs = client.get(f"/api/v1/firmware/{f_id}/filesystem")
     assert res_fs.status_code == 200
     fs_data = res_fs.json()
     assert "nodes" in fs_data
     assert fs_data["total_nodes"] > 0
 
-    # 3. Test vulnerabilities
+    # 5. Test vulnerabilities
     res_v = client.get(f"/api/v1/firmware/{f_id}/vulnerabilities")
     assert res_v.status_code == 200
     v_data = res_v.json()

@@ -51,11 +51,8 @@ RUN mkdir -p /app/data_storage/uploads \
 
 USER firmwarex
 
-# Expose API (8000) and Dashboard (8501) ports
-EXPOSE 8000 8501
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+# Expose default ports
+EXPOSE 8000 8501 10000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["api"]
+CMD ["dashboard"]

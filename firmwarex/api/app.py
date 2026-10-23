@@ -3,7 +3,8 @@ Project Unit42-FirmwareX — FastAPI Application Server
 Palo Alto Networks // Unit 42 Threat Research & Security Engineering
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from firmwarex.config import settings
 from firmwarex.api.routes import router
@@ -28,7 +29,11 @@ app.add_middleware(
 app.include_router(router)
 
 @app.get("/")
-async def root():
+async def root(request: Request):
+    accept = request.headers.get("accept", "")
+    # If accessed from a web browser, redirect directly to the interactive Swagger UI
+    if "text/html" in accept and "application/json" not in accept:
+        return RedirectResponse(url="/docs")
     return {
         "project": settings.PROJECT_NAME,
         "version": settings.VERSION,

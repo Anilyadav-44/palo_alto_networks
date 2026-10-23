@@ -422,6 +422,7 @@ palo_alto_networks/
 
 Comprehensive technical documentation is maintained in the [`docs/`](docs/) directory:
 
+- 📑 [**Internship Final Engineering Write-Up**](docs/FINAL_WRITEUP.md): Complete technical report covering results, benchmarks, containment evidence, design trade-offs, and known limitations.
 - 📐 [**System Architecture & Data Flow**](docs/ARCHITECTURE.md): In-depth component architecture, sequence diagrams, and containment specifications.
 - 📖 [**Operations Runbook**](docs/RUNBOOK.md): Step-by-step deployment guide, operational commands, troubleshooting, and maintenance.
 - 📋 [**PRD Compliance Matrix**](docs/PRD_COMPLIANCE.md): Traceability matrix mapping implementations to functional requirements and KPIs.
@@ -431,9 +432,26 @@ Comprehensive technical documentation is maintained in the [`docs/`](docs/) dire
 
 ---
 
+## GitLab CI/CD & Docker Deployment
+
+The repository includes complete GitLab CI/CD and Docker containerization support:
+
+- **GitLab Repository**: [`https://gitlab.com/cjwrits/palo_alto_networks`](https://gitlab.com/cjwrits/palo_alto_networks)
+- **CI/CD Pipeline** (`.gitlab-ci.yml`):
+  - `lint`: Code quality and formatting checks.
+  - `test`: Automated 23-test execution with Cobertura XML and JUnit test reporting.
+  - `security-audit`: Invariant audit verifying zero outbound egress and 100% secret redaction.
+  - `build`: Container image build for production registry.
+  - `deploy`: Staging deployment verification.
+- **Docker Compose** (`docker-compose.yml`):
+  ```bash
+  # Launch FastAPI backend (8000), Streamlit dashboard (8501), and Redis
+  docker compose up -d --build
+  ```
+
+---
+
 ## License & Classification
 
 **Internal // Confidential — Palo Alto Networks Unit 42**  
 *Threat Research & Security Engineering. All rights reserved.*
-
-Empty Comment

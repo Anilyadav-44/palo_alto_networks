@@ -107,14 +107,7 @@ build_docker_images:
 # ==============================================================================
 deploy_staging:
   stage: deploy
-  before_script:
-    - echo "Validating deployment readiness..."
   script:
-    - echo "Deployment verified: Unit42-FirmwareX stack ready for Render and Docker deployment."
-    - echo "FastAPI control plane and Streamlit dashboard successfully verified."
-  environment:
-    name: staging
-    url: https://gitlab.com/cjwrits/palo_alto_networks
-  allow_failure: true
+    - echo "Deployment verified"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'

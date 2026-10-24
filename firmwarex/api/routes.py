@@ -64,9 +64,28 @@ async def upload_firmware(
     firmware_id = str(uuid.uuid4())
     job_id = str(uuid.uuid4())
 
-    dest_path = settings.FIRMWARE_UPLOAD_DIR / f"{firmware_id}_{file.filename}"
+    # Sanitize upload filename to prevent path traversal
+    safe_filename = Path(file.filename or "firmware.bin").name
+    safe_filename = "".join(c for c in safe_filename if c.isalnum() or c in "._-") or "firmware.bin"
+
+    dest_path = settings.FIRMWARE_UPLOAD_DIR / f"{firmware_id}_{safe_filename}"
+
+    # Stream write with hard size quota enforcement (PRD SC-2.1)
+    file_size = 0
     with open(dest_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        while True:
+            chunk = await file.read(65536)
+            if not chunk:
+                break
+            file_size += len(chunk)
+            if file_size > settings.MAX_FIRMWARE_SIZE_BYTES:
+                buffer.close()
+                dest_path.unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"Firmware image exceeds maximum allowed size ({settings.MAX_FIRMWARE_SIZE_BYTES // (1024*1024)} MB)"
+                )
+            buffer.write(chunk)
 
     now_iso = datetime.now(timezone.utc).isoformat()
     status = AnalysisJobStatus(

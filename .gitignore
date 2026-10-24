@@ -1,10 +1,15 @@
+# Python bytecode and cache
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+junit.xml
+coverage.xml
+
+# Storage Directories (Preserve structure via .gitkeep, ignore runtime data)
 data_storage/uploads/*
 !data_storage/uploads/.gitkeep
 data_storage/extracted/*
@@ -13,7 +18,24 @@ data_storage/reports/*
 !data_storage/reports/.gitkeep
 data_storage/logs/*
 !data_storage/logs/.gitkeep
+
+# Local Environment & Secrets
 .env
+.env.*
 .venv
 env/
 venv/
+ENV/
+
+# OS and Editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.bak
+*.log
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace

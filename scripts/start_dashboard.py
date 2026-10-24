@@ -17,7 +17,8 @@ from firmwarex.config import settings
 
 def main():
     dashboard_path = (PROJECT_ROOT / "firmwarex" / "dashboard" / "app.py").resolve()
-    print(f"Launching Unit42-FirmwareX Dashboard on port {settings.DASHBOARD_PORT}...")
+    port = int(os.environ.get("PORT", settings.DASHBOARD_PORT))
+    print(f"Launching Unit42-FirmwareX Dashboard on port {port}...")
     
     # Ensure subprocess inherits PYTHONPATH
     env = os.environ.copy()
@@ -26,7 +27,7 @@ def main():
     cmd = [
         sys.executable, "-m", "streamlit", "run",
         str(dashboard_path),
-        "--server.port", str(settings.DASHBOARD_PORT),
+        "--server.port", str(port),
         "--server.headless", "true"
     ]
     subprocess.run(cmd, cwd=str(PROJECT_ROOT), env=env)
